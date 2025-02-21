@@ -39,6 +39,9 @@ RUN npm install --omit=dev
 # Copy local code to the container image.
 COPY . ./
 
+# Compile TypeScript files in src folder
+RUN npx tsc --project ./src
+
 # Run the web service on container startup.
 CMD [ "node", "index.js" ]
 
