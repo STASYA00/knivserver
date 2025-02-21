@@ -41,7 +41,7 @@ COPY . ./
 
 # Compile TypeScript files in src folder
 RUN npm install typescript
-RUN npx tsc --project ./src
+RUN npm run build
 
 # Run the web service on container startup.
 CMD [ "node", "index.js" ]
