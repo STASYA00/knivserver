@@ -44,6 +44,6 @@ RUN npm install typescript
 RUN npm run build
 
 # Run the web service on container startup.
-CMD [ "node", "index.js" ]
+CMD [ "node", "dist/index.js" ]
 
 # [END cloudrun_helloworld_dockerfile]
