@@ -40,6 +40,7 @@ RUN npm install --omit=dev
 COPY . ./
 
 # Compile TypeScript files in src folder
+RUN npm install typescript
 RUN npx tsc --project ./src
 
 # Run the web service on container startup.
