@@ -25,7 +25,7 @@ function getEventNames(){
 function getEvents(){
   return {
     "name": EVENTS.WEB_EXPLAIN_ML,
-    "link": "/events/web_explain_ml",
+    "link": "/event/web_explain_ml",
     "image": "https://storage.googleapis.com/upplys_assets/activities/iaac_hackathon2501/randomforest/cover.png"
   };
 }

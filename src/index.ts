@@ -50,7 +50,7 @@ app.get('/articles/items', (req, res)=>{
   res.send(getArticles().then(articles=>articles.map((a:string)=>{
     return {"name": capFirst(a.split("_").join(" ")),
             "image": `${bucket_url}/${a}/cover.png`,
-            "link": `${website}/articles/${a}`}}
+            "link": `${website}/article/${a}`}}
   )))
 });
   
@@ -63,7 +63,7 @@ app.get('/tools/items', (req, res)=>{
         (a:string)=>{
           return {"name": capFirst(a.split("_").join(" ")),
                   "image": `${bucket_url}/articles/${a}/cover.png`,
-                  "link": `${website}/articles/${a}`}
+                  "link": `${website}/article/${a}`}
         }
       ), ...getTools()]))});
 
