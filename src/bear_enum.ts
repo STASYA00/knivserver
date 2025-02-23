@@ -13,5 +13,6 @@ const THEMATIC_BEARS = {
 }
 
 const bucket_url = "https://storage.googleapis.com/upplys_assets";
+const website = "https://learn.knivkit.com";
 
-export {THEMATIC_BEARS, bucket_url}
+export {THEMATIC_BEARS, bucket_url, website}

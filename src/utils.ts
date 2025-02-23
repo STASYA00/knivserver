@@ -18,5 +18,8 @@ function onlyUnique(value:any, index:number, array:any[]):boolean {
     return array.indexOf(value) === index;
   }
   
+  function capFirst(val:string) {
+    return String(val).charAt(0).toUpperCase() + String(val).slice(1);
+}
 
-export {get_keys, get_listkeys, onlyUnique}
+export {get_keys, get_listkeys, onlyUnique, capFirst}

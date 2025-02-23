@@ -2,100 +2,148 @@
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
 
-import { THEMATIC_BEARS } from "./bear_enum";
+import { bucket_url, website } from "./bear_enum";
 import { SupportTeamMap } from "./supportTeam";
 
 dotenv.config();
 
-// import neo4j, { DateTime } from 'neo4j-driver';
-import {Storage, File} from '@google-cloud/storage';
 import { EntityMap, EventFormatMap, EventEndpointMap, EventEntityMap, EventTaksMap, EventTargetMap, EventProjectsMap, EventProgramMap, EventCourseMap, EventYearMap } from "./event_map";
-import { EVENTS } from "./event_enum";
-import { get_keys, onlyUnique } from "./utils";
-import { Console } from "console";
+import { EVENTS} from "./event_enum";
+import { capFirst, get_keys } from "./utils";
+import cors from "cors";
+import { AECdata,ALC, Citylayers, Cryptopanties, GH } from "./catalog";
+
+import { getArticles, getTools, getProjects, getEvents, getEventNames } from "./fetching/knivkit";
+import { downloadIntoMemory, listFiles } from "./fetching/gcs";
 
 const domain = process.env["DOMAIN"] || "http://localhost"; 
-const storage = new Storage();
-const bucket = "upplys_assets";
+
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
+app.use(cors({
+  origin: ['https://learn.knivkit.com', "https://www.knivkit.com/"]
+}));
+// app.use(cors());
 
-async function listFiles(prefix:string="") {
-  // Lists files in the bucket
-  const options = {
-    prefix: prefix,
-  };
-  
-  const [files]: any[] = await storage.bucket(bucket).getFiles(options);
-
-  return files.map((file: any) => file.name);
-}
-
-async function downloadIntoMemory(fname:string) {
-  // Downloads the file into a buffer in memory.
-  
-  return await storage.bucket(bucket).file(fname).download().then(res=>res.toString());
-  }
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Stanislava AB");
 });
 
 app.get('/articles', (req, res)=>{
-  listFiles("articles").catch(console.error).then(b=>res.send(b.map((a:string)=>a.split("/")[1]).filter(onlyUnique).filter((a:string)=>a.length>0)));
-  ;
+  getArticles().then((as:string[])=>res.send(as))});
+
+app.get('/shipped', (req, res)=>{
+  res.send(getProjects());
+});
+
+app.get('/tools', (req, res)=>{
+  getArticles().then(
+    (articles:string[]) => {
+      res.send([...articles, ...getTools().map(t=>t.name)])})}
+    );
+
+app.get('/articles/items', (req, res)=>{
+  res.send(getArticles().then(articles=>articles.map((a:string)=>{
+    return {"name": capFirst(a.split("_").join(" ")),
+            "image": `${bucket_url}/${a}/cover.png`,
+            "link": `${website}/articles/${a}`}}
+  )))
+});
+  
+app.get('/shipped/items', (req, res)=>{
+  res.send(getProjects())
+});
+  
+app.get('/tools/items', (req, res)=>{
+  getArticles().then(articles=>res.send([...articles.map(
+        (a:string)=>{
+          return {"name": capFirst(a.split("_").join(" ")),
+                  "image": `${bucket_url}/articles/${a}/cover.png`,
+                  "link": `${website}/articles/${a}`}
+        }
+      ), ...getTools()]))});
+
+app.get('/events/items', (req, res)=>{
+  res.send(getEvents())
+});
+
+app.get('/item/:name', (req, res)=>{
+  let item = req.params.name;
+  let _items = [ALC, GH, AECdata, Citylayers, Cryptopanties].filter(c=>c.name.toLowerCase()==item.toLowerCase());
+  _items.length==0 ? res.send({
+    name: item,
+    image: `${bucket_url}/${item}/cover.png`,
+    link: `${website}/articles/${item}`
+  }) : res.send(JSON.stringify(_items[0]));
 });
 
 
 app.get('/bears', (req, res)=>{
-    listFiles("bears/all").catch(console.error).then(b=>res.send(b));
+    listFiles("bears/all").catch(console.error).then(b=>res.send({"content":b}));
     ;
 });
 
 app.get('/bear/girls', (req, res)=>{
 
-  listFiles("bears/all").then(bears =>res.send(bears.filter((bear:string)=>bear.includes("girl"))));
+  listFiles("bears/all").then(bears =>res.send({"content":bears.filter((bear:string)=>bear.includes("girl"))}));
   ;
 });
 
 app.get('/bear/group', (req, res)=>{
 
-  listFiles("bears/group").then(b=>res.send(b));
+  listFiles("bears/group").then(bears=>res.send({"content": bears[Math.ceil(Math.random()* (bears.length-1))]}));
   ;
 });
 
+app.get('/bear/groups', (req, res)=>{
+
+  listFiles("bears/group").then(b=>res.send({"content":b}));
+  ;
+});
+
+
 app.get('/bear/thematic/:bear', (req, res)=>{
 
-  listFiles("bears/all").then(bears=>res.send(bears.filter((b:string)=>b.includes(req.params.bear))
+  listFiles("bears/all").then(bears=>res.send({"content":bears.filter((b:string)=>b.includes(req.params.bear))}
   ));
   ;
 });
 
 app.get('/bear/guys', (req, res)=>{
 
-  listFiles("bears/all").then(bears =>res.send(bears.filter((bear:string)=>bear.includes("guy"))));
+  listFiles("bears/all").then(bears =>res.send({"content":bears.filter((bear:string)=>bear.includes("guy"))}));
   ;
 });
 
 app.get('/bear/neutral', (req, res)=>{
 
-  listFiles("bears/all").then(bears =>res.send(bears.filter((bear:string)=>bear.includes("neutral"))));
+  listFiles("bears/all").then(bears =>res.send({"content":bears.filter((bear:string)=>bear.includes("neutral"))}));
   ;
 });
 
 app.get('/bear', (req, res)=>{
 
   listFiles("bears/all").catch(console.error).then(bears=>{
-    res.send(bears[Math.ceil(Math.random()* (bears.length-1))])
+    res.send({"content": bears[Math.ceil(Math.random()* (bears.length-1))]})
+  });
+  ;
+});
+
+app.get('/bear/random/:amount', (req, res)=>{
+  let amount = parseInt(req.params.amount);
+
+  listFiles("bears/all").catch(console.error).then(bears=>{
+    res.send({"content": [...Array(amount).keys()].map(b=>bears[Math.ceil(Math.random()* (bears.length-1))])});
   });
   ;
 });
 
 app.get('/article/:aid', (req, res)=>{
-  downloadIntoMemory(`articles/${req.params.aid}/content.html`).catch(console.error).then(r=>res.send(r))
+  downloadIntoMemory(`articles/${req.params.aid}/content.json`).catch(console.error).then(r=>res.send(JSON.parse(r)))
   ;
 });
 
@@ -110,9 +158,22 @@ app.get('/entity/:name', (req, res)=>{
 app.get('/events', (req, res)=>{
 
   res.send(
-    [EVENTS.WEB_EXPLAIN_ML, EVENTS.INTRO_TO_VP]
+    getEventNames()
   );
   ;
+});
+
+app.get('/events/all', (req, res)=>{
+
+  res.send(
+    getEventNames().map((ev:EVENTS)=>{
+      return {"name": ev,
+        "projects": EventProjectsMap.get(ev),
+        "endpoint": EventEndpointMap.get(ev)
+      
+      }
+    }
+  ))
 });
 
 app.get('/events/:name', (req, res)=>{

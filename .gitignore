@@ -2,3 +2,4 @@
 node_modules
 *.html
 service.json
+content.json
