@@ -1,11 +1,4 @@
-import { CATALOGS } from "../components/section_enum"
 
-
-interface CatalogProps {
-    /** The text to display inside the button */
-    name: CATALOGS;
-    
-  }
 
 interface CatalogCardProps{
   name: string;
@@ -13,5 +6,5 @@ interface CatalogCardProps{
   link: string;
 }
 
-  export {CatalogProps, CatalogCardProps}
+  export {CatalogCardProps}
   
